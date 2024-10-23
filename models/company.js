@@ -3,6 +3,8 @@ const mongoose = require("mongoose");
 const companySchema = new mongoose.Schema({
   email: {
     type: String,
+    trim: true,
+    unique: true,
     required: true,
   },
   password: {
@@ -11,6 +13,10 @@ const companySchema = new mongoose.Schema({
   },
   name: {
     type: String,
+  },
+  authorizeCustomerProfileId: {
+    type: String,
+    required: true,
   },
 });
 

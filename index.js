@@ -3,6 +3,8 @@ const cors = require("cors");
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const authRouter = require("./routes/authRoutes");
+const subscriptionRouter = require("./routes/subscriptions");
+const authMiddleware = require("./middlewares/auth");
 
 require("dotenv").config();
 require("./config/db")();
@@ -14,6 +16,7 @@ app.use(cors({ origin: "http://localhost:3000", credentials: true }));
 app.use(cookieParser());
 
 app.use("/auth", authRouter);
+app.use("/subscription", authMiddleware, subscriptionRouter);
 
 const PORT = process.env.PORT || 5000;
 

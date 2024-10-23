@@ -1,6 +1,7 @@
 const Company = require("../models/company");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const { createAuthorizeCustomerProfile } = require("../config/authorize");
 
 const register = async (req, res) => {
   const { email, name, password } = req.body;
@@ -11,7 +12,20 @@ const register = async (req, res) => {
   if (company)
     return res.status(409).json({ message: "Email already exists!" });
   const hashedPassword = await bcrypt.hash(password, 10);
-  const newCompany = new Company({ name, email, password: hashedPassword });
+
+  let authorizeCustomerProfileId;
+  try {
+    authorizeCustomerProfileId = await createAuthorizeCustomerProfile(email);
+  } catch (error) {
+    return res.status(409).json({ message: error });
+  }
+
+  const newCompany = new Company({
+    name,
+    email,
+    password: hashedPassword,
+    authorizeCustomerProfileId,
+  });
   await newCompany.save();
   const token = jwt.sign({ id: newCompany._id }, process.env.JWT_SECRET, {
     expiresIn: "24h",
