@@ -15,7 +15,9 @@ const register = async (req, res) => {
 
   let authorizeCustomerProfileId;
   try {
-    authorizeCustomerProfileId = await createAuthorizeCustomerProfile(email);
+    authorizeCustomerProfileId = await createAuthorizeCustomerProfile({
+      email,
+    });
   } catch (error) {
     return res.status(409).json({ message: error });
   }

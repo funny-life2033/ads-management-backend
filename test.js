@@ -1,132 +1,92 @@
-"use strict";
-
-var ApiContracts = require("authorizenet").APIContracts;
-var ApiControllers = require("authorizenet").APIControllers;
-
+const { APIContracts, APIControllers } = require("authorizenet");
 require("dotenv").config();
 
-function getRandomString(text) {
-  return text + Math.floor(Math.random() * 100000 + 1);
-}
+const merchantAuthenticationType =
+  new APIContracts.MerchantAuthenticationType();
+merchantAuthenticationType.setName(process.env.SANDBOX_AUTHORIZE_API_LOGIN_ID);
+merchantAuthenticationType.setTransactionKey(
+  process.env.SANDBOX_AUTHORIZE_TRANSACTION_KEY
+);
 
-function getRandomInt() {
-  return Math.floor(Math.random() * 100000 + 1);
-}
+const getAuthorizeSubscriptionStatus = async ({ subscriptionId }) => {
+  return new Promise((res, err) => {
+    const getRequest = new APIContracts.ARBGetSubscriptionRequest();
+    getRequest.setMerchantAuthentication(merchantAuthenticationType);
+    getRequest.setSubscriptionId(subscriptionId);
+    getRequest.setIncludeTransactions(true);
 
-function getRandomAmount() {
-  return (Math.random() * 100 + 1).toFixed(2);
-}
+    const ctrl = new APIControllers.ARBGetSubscriptionController(
+      getRequest.getJSON()
+    );
 
-function getDate() {
-  return new Date().toISOString().substring(0, 10);
-}
+    ctrl.execute(() => {
+      const apiResponse = ctrl.getResponse();
 
-function createSubscription(callback) {
-  var merchantAuthenticationType =
-    new ApiContracts.MerchantAuthenticationType();
-  merchantAuthenticationType.setName(
-    process.env.SANDBOX_AUTHORIZE_API_LOGIN_ID
-  );
-  merchantAuthenticationType.setTransactionKey(
-    process.env.SANDBOX_AUTHORIZE_TRANSACTION_KEY
-  );
+      const response = new APIContracts.ARBGetSubscriptionResponse(apiResponse);
 
-  var interval = new ApiContracts.PaymentScheduleType.Interval();
-  interval.setLength(2);
-  interval.setUnit(ApiContracts.ARBSubscriptionUnitEnum.MONTHS);
+      if (response !== null) {
+        if (
+          response.getMessages().getResultCode() ===
+          APIContracts.MessageTypeEnum.OK
+        ) {
+          const startDate = new Date(
+            response.getSubscription().getPaymentSchedule().getStartDate()
+          );
 
-  var paymentScheduleType = new ApiContracts.PaymentScheduleType();
-  paymentScheduleType.setInterval(interval);
-  paymentScheduleType.setStartDate(getDate());
-  paymentScheduleType.setTotalOccurrences(1);
-  //   paymentScheduleType.setTrialOccurrences(0);
+          const now = new Date(new Date().toUTCString());
+          const nextPaymentDate = new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            startDate.getDate()
+          );
+          if (nextPaymentDate <= now) {
+            nextPaymentDate.setMonth(nextPaymentDate.getMonth() + 1);
+          }
+          if (nextPaymentDate.getDate() !== startDate.getDate()) {
+            nextPaymentDate.getDate(0);
+          }
 
-  var creditCard = new ApiContracts.CreditCardType();
-  creditCard.setExpirationDate("2038-12");
-  creditCard.setCardNumber("4111111111111111");
+          const status = response.getSubscription().getStatus();
+          if (status === APIContracts.ARBSubscriptionStatusEnum.ACTIVE) {
+            return res({
+              productId: response.getSubscription().getName(),
+              nextPaymentDate,
+            });
+          } else {
+            for (let transaction of response
+              .getSubscription()
+              .getArbTransactions()
+              .getArbTransaction()) {
+              const submitDate = new Date(transaction.getSubmitTimeUTC());
 
-  var payment = new ApiContracts.PaymentType();
-  payment.setCreditCard(creditCard);
+              const diffMonths =
+                (nextPaymentDate.getFullYear() - submitDate.getFullYear()) *
+                  12 +
+                nextPaymentDate.getMonth() -
+                submitDate.getMonth();
 
-  var orderType = new ApiContracts.OrderType();
-  //   orderType.setInvoiceNumber(getRandomString("Inv:"));
-  //   orderType.setDescription(getRandomString("Description"));
+              const isActive = diffMonths <= 1;
 
-  var customer = new ApiContracts.CustomerType();
-  customer.setType(ApiContracts.CustomerTypeEnum.INDIVIDUAL);
-  customer.setId(getRandomString("Id"));
-  customer.setEmail("topmasterdev2033@gmail.com");
-  customer.setPhoneNumber("1232122122");
-  customer.setFaxNumber("1232122122");
-  customer.setTaxId("911011011");
+              if (isActive) {
+                return res({
+                  productId: response.getSubscription().getName(),
+                  endDate: nextPaymentDate,
+                });
+              }
+            }
 
-  var nameAndAddressType = new ApiContracts.NameAndAddressType();
-  nameAndAddressType.setFirstName(getRandomString("FName"));
-  nameAndAddressType.setLastName(getRandomString("LName"));
-  nameAndAddressType.setCompany(getRandomString("Company"));
-  nameAndAddressType.setAddress(getRandomString("Address"));
-  nameAndAddressType.setCity(getRandomString("City"));
-  nameAndAddressType.setState(getRandomString("State"));
-  nameAndAddressType.setZip("98004");
-  nameAndAddressType.setCountry("USA");
-
-  var arbSubscription = new ApiContracts.ARBSubscriptionType();
-  arbSubscription.setName(getRandomString("Name"));
-  arbSubscription.setPaymentSchedule(paymentScheduleType);
-  arbSubscription.setAmount("10.00");
-  //   arbSubscription.setTrialAmount(getRandomAmount());
-  arbSubscription.setPayment(payment);
-  arbSubscription.setOrder(orderType);
-  arbSubscription.setCustomer(customer);
-  arbSubscription.setBillTo(nameAndAddressType);
-  arbSubscription.setShipTo(nameAndAddressType);
-
-  var createRequest = new ApiContracts.ARBCreateSubscriptionRequest();
-  createRequest.setMerchantAuthentication(merchantAuthenticationType);
-  createRequest.setSubscription(arbSubscription);
-
-  console.log(JSON.stringify(createRequest.getJSON(), null, 2));
-
-  var ctrl = new ApiControllers.ARBCreateSubscriptionController(
-    createRequest.getJSON()
-  );
-
-  ctrl.execute(function () {
-    var apiResponse = ctrl.getResponse();
-
-    var response = new ApiContracts.ARBCreateSubscriptionResponse(apiResponse);
-
-    console.log(JSON.stringify(response, null, 2));
-
-    if (response != null) {
-      if (
-        response.getMessages().getResultCode() ==
-        ApiContracts.MessageTypeEnum.OK
-      ) {
-        console.log("Subscription Id : " + response.getSubscriptionId());
-        console.log(
-          "Message Code : " + response.getMessages().getMessage()[0].getCode()
-        );
-        console.log(
-          "Message Text : " + response.getMessages().getMessage()[0].getText()
-        );
+            return res({ expired: true });
+          }
+        } else {
+          err(response.getMessages().getMessage()[0].getText());
+        }
       } else {
-        console.log("Result Code: " + response.getMessages().getResultCode());
-        console.log(
-          "Error Code: " + response.getMessages().getMessage()[0].getCode()
-        );
-        console.log(
-          "Error message: " + response.getMessages().getMessage()[0].getText()
-        );
+        err("Server error!");
       }
-    } else {
-      console.log("Null Response.");
-    }
-
-    callback(response);
+    });
   });
-}
+};
 
-createSubscription(function () {
-  console.log("createSubscription call complete.");
-});
+getAuthorizeSubscriptionStatus({ subscriptionId: "9395629" })
+  .then((res) => console.log("res:", JSON.stringify(res, null, 2)))
+  .catch((err) => console.log("err:", err));

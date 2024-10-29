@@ -17,6 +17,7 @@ const companySchema = new mongoose.Schema({
   authorizeCustomerProfileId: {
     type: String,
     required: true,
+    unique: true,
   },
 });
 

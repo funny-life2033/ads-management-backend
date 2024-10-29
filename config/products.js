@@ -4,7 +4,7 @@ const products = [
     title: "Basic Plan",
     description: "Basic subscription plan",
     price: "10.00",
-    interval: "months",
+    interval: "monthly",
     color: "#3f51b5",
   },
 ];

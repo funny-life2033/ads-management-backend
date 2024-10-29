@@ -1,16 +1,19 @@
 const mongoose = require("mongoose");
+const products = require("../config/products");
 
 const SubscriptionSchema = new mongoose.Schema({
   companyId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Company",
     required: true,
+    unique: true,
   },
-  plan: { type: String, required: true },
-  status: { type: String, default: "active" },
+  plan: {
+    type: String,
+    enum: products.map((product) => product.id),
+    required: true,
+  },
   subscriptionId: { type: String, required: true },
-  startDate: { type: Date, default: Date.now },
-  endDate: { type: Date },
 });
 
 module.exports = mongoose.model("Subscription", SubscriptionSchema);
