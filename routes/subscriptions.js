@@ -11,7 +11,7 @@ const router = express.Router();
 
 router.get("/", getPlans);
 router.post("/", createSubscription);
-router.put("/", updateSubscription);
+// router.put("/", updateSubscription);
 router.delete("/", cancelSubscription);
 router.get("/check", checkSubcription);
 

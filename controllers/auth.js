@@ -1,11 +1,9 @@
 const Company = require("../models/company");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const { createAuthorizeCustomerProfile } = require("../config/authorize");
 
 const register = async (req, res) => {
   const { email, name, password } = req.body;
-  console.log(email, name, password);
   if (!email || email === "" || !password || password === "")
     return res.status(400).json({ message: "Email or password is empty!" });
   const company = await Company.findOne({ email: email.toLocaleLowerCase() });
@@ -13,20 +11,10 @@ const register = async (req, res) => {
     return res.status(409).json({ message: "Email already exists!" });
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  let authorizeCustomerProfileId;
-  try {
-    authorizeCustomerProfileId = await createAuthorizeCustomerProfile({
-      email,
-    });
-  } catch (error) {
-    return res.status(409).json({ message: error });
-  }
-
   const newCompany = new Company({
     name,
     email,
     password: hashedPassword,
-    authorizeCustomerProfileId,
   });
   await newCompany.save();
   const token = jwt.sign({ id: newCompany._id }, process.env.JWT_SECRET, {
@@ -69,10 +57,12 @@ const isAuth = async (req, res) => {
   jwt.verify(token, process.env.JWT_SECRET, async (err, company) => {
     if (err) return res.status(403).json({ message: "Token is invalid!" });
     const companyData = await Company.findById(company.id);
-    res.json({
-      message: "Authenticated",
-      company: { name: companyData.name, email: companyData.email },
-    });
+    if (companyData)
+      return res.json({
+        message: "Authenticated",
+        company: { name: companyData.name, email: companyData.email },
+      });
+    else return res.status(400).json({ message: "Invalid Token" });
   });
 };
 
