@@ -3,8 +3,10 @@ const cors = require("cors");
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const authRouter = require("./routes/authRoutes");
-const subscriptionRouter = require("./routes/subscriptions");
+const subsRouter = require("./routes/subsRoutes");
+const adsRouter = require("./routes/adsRoutes");
 const authMiddleware = require("./middlewares/auth");
+const { getRandomAds } = require("./controllers/ads");
 
 require("dotenv").config();
 require("./config/db")();
@@ -16,7 +18,9 @@ app.use(cors({ origin: "http://localhost:3000", credentials: true }));
 app.use(cookieParser());
 
 app.use("/auth", authRouter);
-app.use("/subscription", authMiddleware, subscriptionRouter);
+app.use("/subscription", authMiddleware, subsRouter);
+app.use("/ads", authMiddleware, adsRouter);
+app.get("/randomAds", getRandomAds);
 
 const PORT = process.env.PORT || 5000;
 
