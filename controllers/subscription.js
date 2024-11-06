@@ -22,6 +22,12 @@ const getPlans = async (req, res) => {
     if (!companyData)
       return res.status(403).json({ message: "Token is invalid" });
 
+    if (
+      !companyData.authorizeSubscriptionId ||
+      companyData.authorizeSubscriptionId === ""
+    ) {
+      return res.json({ message: "Success!", plans: products });
+    }
     try {
       const { expired, isPending, product, nextPaymentDate, endDate } =
         await getAuthorizeSubscriptionStatus({
@@ -107,7 +113,39 @@ const createSubscription = (req, res) => {
         console.log(error);
       }
     }
+
+    if (!req.body.paymentInfo)
+      return res
+        .status(400)
+        .json({ message: "Please provide your payment info" });
+
     try {
+      if (
+        companyData.authorizeCustomerPaymentProfileId &&
+        companyData.authorizeCustomerProfileId
+      ) {
+        await updateAuthorizeCustomerPaymentProfile({
+          customerProfileId: companyData.authorizeCustomerProfileId,
+          customerPaymentProfileId:
+            companyData.authorizeCustomerPaymentProfileId,
+          ...req.body.paymentInfo,
+        });
+
+        const { subscriptionId } =
+          await createAuthorizeSubscriptionFromCustomerProfile({
+            customerProfileId: companyData.authorizeCustomerProfileId,
+            customerPaymentProfileId:
+              companyData.authorizeCustomerPaymentProfileId,
+            productId: requiringProduct.id,
+          });
+
+        companyData.authorizeSubscriptionId = subscriptionId;
+
+        await companyData.save();
+
+        return res.json({ message: "Success!" });
+      }
+
       const { subscriptionId, customerProfileId, customerPaymentProfileId } =
         await createAuthorizeSubscription({
           productId: req.body.productId,
@@ -189,7 +227,12 @@ const checkSubcription = (req, res) => {
     const companyData = await Company.findById(company.id);
     if (!companyData)
       return res.status(403).json({ message: "Token is invalid" });
-
+    if (
+      !companyData.authorizeSubscriptionId ||
+      companyData.authorizeSubscriptionId === ""
+    ) {
+      return res.status(400).json({ message: "You have not any subscription" });
+    }
     try {
       const { expired, isPending, product, endDate, nextPaymentDate } =
         await getAuthorizeSubscriptionStatus({
@@ -197,6 +240,7 @@ const checkSubcription = (req, res) => {
         });
       const {
         cardNumber,
+        cardCode,
         expiryDate,
         firstName,
         lastName,
@@ -218,6 +262,7 @@ const checkSubcription = (req, res) => {
           isPending,
           paymentInfo: {
             cardNumber,
+            cardCode,
             expiryDate,
             firstName,
             lastName,
@@ -233,6 +278,7 @@ const checkSubcription = (req, res) => {
           message: "Your plan expired",
           paymentInfo: {
             cardNumber,
+            cardCode,
             expiryDate,
             firstName,
             lastName,

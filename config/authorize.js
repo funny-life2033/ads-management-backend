@@ -1,22 +1,23 @@
-const { APIContracts, APIControllers } = require("authorizenet");
+const { APIContracts, APIControllers, Constants } = require("authorizenet");
 const products = require("./products");
 
 require("dotenv").config();
 
 const merchantAuthenticationType =
   new APIContracts.MerchantAuthenticationType();
-merchantAuthenticationType.setName(process.env.SANDBOX_AUTHORIZE_API_LOGIN_ID);
-merchantAuthenticationType.setTransactionKey(
-  process.env.SANDBOX_AUTHORIZE_TRANSACTION_KEY
-);
-
-// merchantAuthenticationType.setName(process.env.AUTHORIZE_API_LOGIN_ID);
+// merchantAuthenticationType.setName(process.env.SANDBOX_AUTHORIZE_API_LOGIN_ID);
 // merchantAuthenticationType.setTransactionKey(
-//   process.env.AUTHORIZE_TRANSACTION_KEY
+//   process.env.SANDBOX_AUTHORIZE_TRANSACTION_KEY
 // );
+
+merchantAuthenticationType.setName(process.env.AUTHORIZE_API_LOGIN_ID);
+merchantAuthenticationType.setTransactionKey(
+  process.env.AUTHORIZE_TRANSACTION_KEY
+);
 
 const createAuthorizeSubscription = async ({
   cardNumber,
+  cardCode,
   expiryDate,
   productId,
   email,
@@ -47,6 +48,7 @@ const createAuthorizeSubscription = async ({
       const creditCard = new APIContracts.CreditCardType();
       creditCard.setExpirationDate(expiryDate);
       creditCard.setCardNumber(cardNumber);
+      creditCard.setCardCode(cardCode);
 
       const payment = new APIContracts.PaymentType();
       payment.setCreditCard(creditCard);
@@ -79,6 +81,8 @@ const createAuthorizeSubscription = async ({
       const ctrl = new APIControllers.ARBCreateSubscriptionController(
         createRequest.getJSON()
       );
+
+      ctrl.setEnvironment(Constants.endpoint.production);
 
       ctrl.execute(() => {
         try {
@@ -154,6 +158,8 @@ const createAuthorizeSubscriptionFromCustomerProfile = async ({
       createRequest.getJSON()
     );
 
+    ctrl.setEnvironment(Constants.endpoint.production);
+
     ctrl.execute(() => {
       const apiResponse = ctrl.getResponse();
 
@@ -190,10 +196,12 @@ const getAuthorizeSubscriptionStatus = async (
       const ctrl = new APIControllers.ARBGetSubscriptionController(
         getRequest.getJSON()
       );
+      ctrl.setEnvironment(Constants.endpoint.production);
 
       ctrl.execute(async () => {
         try {
           const apiResponse = ctrl.getResponse();
+          console.log(JSON.stringify(apiResponse, null, 2));
           const response = new APIContracts.ARBGetSubscriptionResponse(
             apiResponse
           );
@@ -354,6 +362,8 @@ const getAuthorizeCustomerPaymentProfile = async ({
         getRequest.getJSON()
       );
 
+      ctrl.setEnvironment(Constants.endpoint.production);
+
       ctrl.execute(() => {
         try {
           const apiResponse = ctrl.getResponse();
@@ -371,7 +381,7 @@ const getAuthorizeCustomerPaymentProfile = async ({
                 .getPaymentProfile()
                 .getPayment()
                 .getCreditCard();
-              const cardNumber = payment.getCardNumber();
+              const cardNumber = "";
               const expiryDate = payment.getExpirationDate();
 
               const billTo = response.getPaymentProfile().getBillTo();
@@ -385,6 +395,7 @@ const getAuthorizeCustomerPaymentProfile = async ({
 
               return res({
                 cardNumber,
+                cardCode: "",
                 expiryDate,
                 firstName,
                 lastName,
@@ -432,6 +443,8 @@ const updateAuthorizeSubscription = async ({ subscriptionId, productId }) => {
         updateRequest.getJSON()
       );
 
+      ctrl.setEnvironment(Constants.endpoint.production);
+
       ctrl.execute(() => {
         try {
           const apiResponse = ctrl.getResponse();
@@ -465,6 +478,7 @@ const updateAuthorizeCustomerPaymentProfile = async ({
   customerProfileId,
   customerPaymentProfileId,
   cardNumber,
+  cardCode,
   expiryDate,
   firstName,
   lastName,
@@ -478,6 +492,7 @@ const updateAuthorizeCustomerPaymentProfile = async ({
     const creditCard = new APIContracts.CreditCardType();
     creditCard.setCardNumber(cardNumber);
     creditCard.setExpirationDate(expiryDate);
+    creditCard.setCardCode(cardCode);
 
     const paymentType = new APIContracts.PaymentType();
     paymentType.setCreditCard(creditCard);
@@ -507,6 +522,8 @@ const updateAuthorizeCustomerPaymentProfile = async ({
     const ctrl = new APIControllers.UpdateCustomerPaymentProfileController(
       updateRequest.getJSON()
     );
+
+    ctrl.setEnvironment(Constants.endpoint.production);
 
     ctrl.execute(() => {
       const apiResponse = ctrl.getResponse();
@@ -541,6 +558,8 @@ const cancelAuthorizeSubscription = async ({ subscriptionId }) => {
       const ctrl = new APIControllers.ARBCancelSubscriptionController(
         cancelRequest.getJSON()
       );
+
+      ctrl.setEnvironment(Constants.endpoint.production);
 
       ctrl.execute(function () {
         try {
