@@ -137,6 +137,33 @@ const getAds = async (req, res) => {
   });
 };
 
+const resetAds = async (req, res) => {
+  const token = req.cookies.token;
+
+  jwt.verify(token, process.env.JWT_SECRET, async (err, company) => {
+    if (err) {
+      return res.status(403).json({ message: "Token is invalid" });
+    }
+
+    try {
+      const companyData = await Company.findById(company.id);
+      if (!companyData)
+        return res.status(403).json({ message: "Token is invalid" });
+
+      const ad = await Ads.findOne({ companyId: companyData._id });
+      if (ad) {
+        await shopify.asset.delete(process.env.SHOPIFY_THEME_ID, {
+          asset: { key: `assets/${ad._id}` },
+        });
+        await ad.deleteOne();
+      }
+      res.json({ message: "Successfully reset!" });
+    } catch (err) {
+      return res.status(400).json({ message: "resetting failed!" });
+    }
+  });
+};
+
 const getRandomAds = async (req, res) => {
   try {
     const ads = await Ads.find({});
@@ -178,4 +205,4 @@ const getRandomAds = async (req, res) => {
   } catch (error) {}
 };
 
-module.exports = { submitAds, getAds, getRandomAds };
+module.exports = { submitAds, getAds, getRandomAds, resetAds };
