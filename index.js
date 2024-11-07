@@ -17,10 +17,10 @@ app.use(bodyParser.json({ limit: "50mb" }));
 app.use(cors({ origin: "*", credentials: true }));
 app.use(cookieParser());
 
-app.use("/auth", authRouter);
-app.use("/subscription", authMiddleware, subsRouter);
-app.use("/ads", authMiddleware, adsRouter);
-app.get("/randomAds", getRandomAds);
+app.use("/api/auth", authRouter);
+app.use("/api/subscription", authMiddleware, subsRouter);
+app.use("/api/ads", authMiddleware, adsRouter);
+app.get("/api/randomAds", getRandomAds);
 
 const PORT = process.env.PORT || 5000;
 
