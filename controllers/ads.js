@@ -86,7 +86,7 @@ const submitAds = async (req, res) => {
 
         await newAds.save();
 
-        const public_url = await shopify.asset.create(
+        const { public_url } = await shopify.asset.create(
           process.env.SHOPIFY_THEME_ID,
           {
             key: `assets/${newAds._id}`,
