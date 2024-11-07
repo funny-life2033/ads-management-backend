@@ -2,6 +2,8 @@ const Ads = require("./models/ads");
 const Company = require("./models/company");
 const { getAuthorizeSubscriptionStatus } = require("./config/authorize");
 
+require("./config/db")();
+
 setInterval(async () => {
   try {
     const ads = await Ads.find({});
