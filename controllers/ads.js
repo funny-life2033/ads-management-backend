@@ -198,7 +198,7 @@ const getRandomAds = async (req, res) => {
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       function redirectToParent(url) {
-        window.parent.location.href = url; // Redirect the parent window
+        window.parent.open(url,'_blank');
       }
     </script>
 </head>
