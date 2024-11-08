@@ -207,6 +207,9 @@ const getRandomAds = async (req, res) => {
         <div class="md:flex">
             <div class="md:flex-shrink-0">
                 <img class="w-full h-full object-top object-cover md:w-48" src="${ad.banner}" alt="Smart advertisement image" id="adImage">
+                <script>
+                  document.getElementById("adImage").style.height = document.getElementById("adImage").naturalHeight + "px";
+                </script>
             </div>
             <div class="p-8">
                 <div class="uppercase tracking-wide text-sm text-[#F79518] font-semibold" id="adTitle">${ad.title}</div>
