@@ -1,25 +1,44 @@
 <!-- index.html -->
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Main Page</title>
-</head>
-<body>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  </head>
+  <body>
     <h1>Main Page</h1>
-    <iframe src="https://vinylbayads.com/api/randomAds" width="600" height="400" title="Iframe Example" style="border: none;background-color: rgba(0, 0, 0, 0);"></iframe>
+    <iframe
+      width="600"
+      height="0"
+      style="border: none; background-color: rgba(0, 0, 0, 0)"
+      onload="resizeIframe(this)"
+    ></iframe>
     <script>
-        function resizeIframe(iframe) {
-            window.addEventListener('message', function(event) {
-            if (event.origin !== "https://vinylbayads.com") return;
+      const iframes = document.getElementsByTagName("iframe");
+      axios
+        .post("https://vinylbayads.com/api/randomAds", {
+          count: iframes.length,
+        })
+        .then((res) => {
+          for (let i = 0; i < res.data.length; i++) {
+            const htmlContent = res.data[i];
+            const iframe = iframes[i];
+            if (iframe) {
+              const iframeDoc =
+                iframe.contentDocument || iframe.contentWindow.document;
+              iframeDoc.open();
+              iframeDoc.write(htmlContent);
+              iframeDoc.close();
+            }
+          }
+        })
+        .catch(() => {});
 
-            // Resize the iframe based on the received height
-            const iframe = document.getElementById('myIframe');
-            iframe.style.height = event.data + 'px';
-        });
-        }
-        
+      function resizeIframe(iframe) {
+        iframe.height = iframe.contentWindow.document.body.scrollHeight;
+      }
     </script>
-</body>
+  </body>
 </html>
