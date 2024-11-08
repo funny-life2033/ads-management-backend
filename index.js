@@ -20,6 +20,7 @@ app.use(
   cors({
     origin: (origin, callback) => {
       // Allow requests with no origin (like mobile apps, curl requests)
+      console.log(JSON.stringify(origin, null, 2));
       if (!origin || allowedOrigins.indexOf(origin) !== -1) {
         callback(null, origin);
       } else {
