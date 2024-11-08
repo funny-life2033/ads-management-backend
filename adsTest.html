@@ -8,6 +8,11 @@
 </head>
 <body>
     <h1>Main Page</h1>
-    <iframe src="https://vinylbayads.com/api/randomAds" width="600" height="400" title="Iframe Example" style="border: none;background-color: rgba(0, 0, 0, 0);"></iframe>
+    <iframe src="https://vinylbayads.com/api/randomAds" width="600" height="400" title="Iframe Example" style="border: none;background-color: rgba(0, 0, 0, 0);" onload="resizeIframe(this)"></iframe>
+    <script>
+        function resizeIframe(iframe) {
+            iframe.style.height = iframe.contentWindow.document.body.scrollHeight + 'px';
+        }
+    </script>
 </body>
 </html>

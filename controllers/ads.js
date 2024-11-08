@@ -200,7 +200,17 @@ const getRandomAds = async (req, res) => {
 </body>
 </html>`);
     } else {
-      res.send("");
+      res.send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Ads Section</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="p-4">
+</body>
+</html>`);
     }
   } catch (error) {}
 };
