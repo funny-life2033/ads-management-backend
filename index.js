@@ -13,8 +13,22 @@ require("./config/db")();
 
 const app = express();
 
+const allowedOrigins = ["https://vinylbayads.com", "https://vinylbay777.com"];
+
 app.use(bodyParser.json({ limit: "50mb" }));
-app.use(cors({ origin: "*", credentials: true }));
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps, curl requests)
+      if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+        callback(null, origin);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+  })
+);
 app.use(cookieParser());
 
 app.use("/api/auth", authRouter);
