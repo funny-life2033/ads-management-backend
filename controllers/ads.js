@@ -208,7 +208,7 @@ const getRandomAds = async (req, res) => {
     <title>Smart Ads Section</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="p-4">
+<body>
 </body>
 </html>`);
     }
