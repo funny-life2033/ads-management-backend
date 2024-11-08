@@ -165,11 +165,31 @@ const resetAds = async (req, res) => {
 };
 
 const getRandomAds = async (req, res) => {
+  const count = parseInt(req.body.count);
+  if (isNaN(count) || count === 0) {
+    return res.json([]);
+  }
+
   try {
     const ads = await Ads.find({});
     if (ads.length) {
-      const ad = ads[Math.floor(Math.random() * ads.length)];
-      res.send(`<!DOCTYPE html>
+      const requiredAds = [];
+
+      if (ads.length <= count) {
+        requiredAds.push(...Array.from(ads));
+      }
+      const randomNos = [];
+      while (requiredAds.length < count) {
+        const randomNo = Math.floor(Math.random() * ads.length);
+        if (!randomNos.includes(randomNo)) {
+          randomNos.push(randomNo);
+          requiredAds.push(ads[randomNo]);
+        }
+      }
+
+      res.json(
+        requiredAds.map(
+          (ad) => `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -198,21 +218,16 @@ const getRandomAds = async (req, res) => {
         </div>
     </div>
 </body>
-</html>`);
+</html>`
+        )
+      );
     } else {
-      res.send(`<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Ads Section</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body>
-</body>
-</html>`);
+      res.json([]);
     }
-  } catch (error) {}
+  } catch (error) {
+    console.log("getting random ads:", error);
+    res.json([]);
+  }
 };
 
 module.exports = { submitAds, getAds, getRandomAds, resetAds };

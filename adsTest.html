@@ -8,11 +8,18 @@
 </head>
 <body>
     <h1>Main Page</h1>
-    <iframe src="https://vinylbayads.com/api/randomAds" width="600" height="400" title="Iframe Example" style="border: none;background-color: rgba(0, 0, 0, 0);" onload="resizeIframe(this)"></iframe>
+    <iframe src="https://vinylbayads.com/api/randomAds" width="600" height="400" title="Iframe Example" style="border: none;background-color: rgba(0, 0, 0, 0);"></iframe>
     <script>
         function resizeIframe(iframe) {
-            iframe.style.height = iframe.contentWindow.document.body.scrollHeight + 'px';
+            window.addEventListener('message', function(event) {
+            if (event.origin !== "https://vinylbayads.com") return;
+
+            // Resize the iframe based on the received height
+            const iframe = document.getElementById('myIframe');
+            iframe.style.height = event.data + 'px';
+        });
         }
+        
     </script>
 </body>
 </html>

@@ -20,7 +20,7 @@ app.use(cookieParser());
 app.use("/api/auth", authRouter);
 app.use("/api/subscription", authMiddleware, subsRouter);
 app.use("/api/ads", authMiddleware, adsRouter);
-app.get("/api/randomAds", getRandomAds);
+app.post("/api/randomAds", getRandomAds);
 
 const PORT = process.env.PORT || 5000;
 
