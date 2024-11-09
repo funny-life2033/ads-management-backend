@@ -165,6 +165,7 @@ const resetAds = async (req, res) => {
 };
 
 const getRandomAds = async (req, res) => {
+  console.log(count);
   const count = parseInt(req.body.count);
   if (isNaN(count) || count === 0) {
     return res.json([]);
