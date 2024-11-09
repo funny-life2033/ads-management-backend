@@ -165,7 +165,6 @@ const resetAds = async (req, res) => {
 };
 
 const getRandomAds = async (req, res) => {
-  console.log("count:", req.body.count);
   const count = parseInt(req.body.count);
   if (isNaN(count) || count === 0) {
     return res.json([]);
@@ -178,17 +177,16 @@ const getRandomAds = async (req, res) => {
 
       if (ads.length <= count) {
         requiredAds.push(...Array.from(ads));
-      }
-      const randomNos = [];
-      while (requiredAds.length < count) {
-        const randomNo = Math.floor(Math.random() * ads.length);
-        if (!randomNos.includes(randomNo)) {
-          randomNos.push(randomNo);
-          requiredAds.push(ads[randomNo]);
+      } else {
+        const randomNos = [];
+        while (requiredAds.length < count) {
+          const randomNo = Math.floor(Math.random() * ads.length);
+          if (!randomNos.includes(randomNo)) {
+            randomNos.push(randomNo);
+            requiredAds.push(ads[randomNo]);
+          }
         }
       }
-
-      console.log(JSON.stringify(requiredAds, null, 2));
 
       res.json(
         requiredAds.map(
