@@ -188,6 +188,8 @@ const getRandomAds = async (req, res) => {
         }
       }
 
+      console.log(JSON.stringify(requiredAds, null, 2));
+
       res.json(
         requiredAds.map(
           (ad) => `<!DOCTYPE html>
