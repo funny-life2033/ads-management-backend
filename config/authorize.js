@@ -5,15 +5,15 @@ require("dotenv").config();
 
 const merchantAuthenticationType =
   new APIContracts.MerchantAuthenticationType();
-// merchantAuthenticationType.setName(process.env.SANDBOX_AUTHORIZE_API_LOGIN_ID);
-// merchantAuthenticationType.setTransactionKey(
-//   process.env.SANDBOX_AUTHORIZE_TRANSACTION_KEY
-// );
-
-merchantAuthenticationType.setName(process.env.AUTHORIZE_API_LOGIN_ID);
+merchantAuthenticationType.setName(process.env.SANDBOX_AUTHORIZE_API_LOGIN_ID);
 merchantAuthenticationType.setTransactionKey(
-  process.env.AUTHORIZE_TRANSACTION_KEY
+  process.env.SANDBOX_AUTHORIZE_TRANSACTION_KEY
 );
+
+// merchantAuthenticationType.setName(process.env.AUTHORIZE_API_LOGIN_ID);
+// merchantAuthenticationType.setTransactionKey(
+//   process.env.AUTHORIZE_TRANSACTION_KEY
+// );
 
 const createAuthorizeSubscription = async ({
   cardNumber,
