@@ -171,7 +171,7 @@ const getRandomAds = async (req, res) => {
   }
 
   try {
-    const ads = await Ads.find({});
+    const ads = await Ads.find({ isAvailable: true });
     if (ads.length) {
       const requiredAds = [];
 
