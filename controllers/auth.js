@@ -11,21 +11,27 @@ const register = async (req, res) => {
     return res.status(409).json({ message: "Email already exists!" });
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  const newCompany = new Company({
-    name,
-    email,
-    password: hashedPassword,
-  });
-  await newCompany.save();
-  const token = jwt.sign({ id: newCompany._id }, process.env.JWT_SECRET, {
-    expiresIn: "24h",
-  });
-  res.cookie("token", token, {
-    httpOnly: true,
-    secure: false,
-    sameSite: "Strict",
-  });
-  res.json({ message: "You have successfully registered!" });
+  try {
+    const newCompany = new Company({
+      name,
+      email,
+      password: hashedPassword,
+    });
+    await newCompany.save();
+
+    const token = jwt.sign({ id: newCompany._id }, process.env.JWT_SECRET, {
+      expiresIn: "24h",
+    });
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "Strict",
+    });
+    res.json({ message: "You have successfully registered!" });
+  } catch (error) {
+    console.log("error in new company registration:", error);
+    res.status(400).json({ message: "Duplicated email address!" });
+  }
 };
 
 const login = async (req, res) => {

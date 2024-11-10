@@ -525,7 +525,11 @@ const updateAuthorizeCustomerPaymentProfile = async ({
     updateRequest.setMerchantAuthentication(merchantAuthenticationType);
     updateRequest.setCustomerProfileId(customerProfileId);
     updateRequest.setPaymentProfile(customerForUpdate);
-    updateRequest.setValidationMode(APIContracts.ValidationModeEnum.LIVEMODE);
+    updateRequest.setValidationMode(
+      mode === "test"
+        ? APIContracts.ValidationModeEnum.TESTMODE
+        : APIContracts.ValidationModeEnum.LIVEMODE
+    );
 
     const ctrl = new APIControllers.UpdateCustomerPaymentProfileController(
       updateRequest.getJSON()

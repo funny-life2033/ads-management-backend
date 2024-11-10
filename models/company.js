@@ -16,15 +16,12 @@ const companySchema = new mongoose.Schema({
   },
   authorizeSubscriptionId: {
     type: String,
-    unique: true,
   },
   authorizeCustomerProfileId: {
     type: String,
-    unique: true,
   },
   authorizeCustomerPaymentProfileId: {
     type: String,
-    unique: true,
   },
 });
 
