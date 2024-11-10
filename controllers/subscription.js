@@ -119,11 +119,11 @@ const createSubscription = (req, res) => {
         .status(400)
         .json({ message: "Please provide your payment info" });
 
-    try {
-      if (
-        companyData.authorizeCustomerPaymentProfileId &&
-        companyData.authorizeCustomerProfileId
-      ) {
+    if (
+      companyData.authorizeCustomerPaymentProfileId &&
+      companyData.authorizeCustomerProfileId
+    ) {
+      try {
         await updateAuthorizeCustomerPaymentProfile({
           customerProfileId: companyData.authorizeCustomerProfileId,
           customerPaymentProfileId:
@@ -144,8 +144,9 @@ const createSubscription = (req, res) => {
         await companyData.save();
 
         return res.json({ message: "Success!" });
-      }
-
+      } catch (error) {}
+    }
+    try {
       const { subscriptionId, customerProfileId, customerPaymentProfileId } =
         await createAuthorizeSubscription({
           productId: req.body.productId,
