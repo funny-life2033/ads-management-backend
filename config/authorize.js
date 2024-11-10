@@ -3,11 +3,19 @@ const products = require("./products");
 
 require("dotenv").config();
 
+const mode = "test";
+
 const merchantAuthenticationType =
   new APIContracts.MerchantAuthenticationType();
-merchantAuthenticationType.setName(process.env.SANDBOX_AUTHORIZE_API_LOGIN_ID);
+merchantAuthenticationType.setName(
+  mode === "test"
+    ? process.env.SANDBOX_AUTHORIZE_API_LOGIN_ID
+    : process.env.AUTHORIZE_API_LOGIN_ID
+);
 merchantAuthenticationType.setTransactionKey(
-  process.env.SANDBOX_AUTHORIZE_TRANSACTION_KEY
+  mode === "test"
+    ? process.env.SANDBOX_AUTHORIZE_TRANSACTION_KEY
+    : process.env.AUTHORIZE_TRANSACTION_KEY
 );
 
 // merchantAuthenticationType.setName(process.env.AUTHORIZE_API_LOGIN_ID);
@@ -82,7 +90,7 @@ const createAuthorizeSubscription = async ({
         createRequest.getJSON()
       );
 
-      ctrl.setEnvironment(Constants.endpoint.production);
+      if (mode !== "test") ctrl.setEnvironment(Constants.endpoint.production);
 
       ctrl.execute(() => {
         try {
@@ -158,7 +166,7 @@ const createAuthorizeSubscriptionFromCustomerProfile = async ({
       createRequest.getJSON()
     );
 
-    ctrl.setEnvironment(Constants.endpoint.production);
+    if (mode !== "test") ctrl.setEnvironment(Constants.endpoint.production);
 
     ctrl.execute(() => {
       const apiResponse = ctrl.getResponse();
@@ -196,7 +204,7 @@ const getAuthorizeSubscriptionStatus = async (
       const ctrl = new APIControllers.ARBGetSubscriptionController(
         getRequest.getJSON()
       );
-      ctrl.setEnvironment(Constants.endpoint.production);
+      if (mode !== "test") ctrl.setEnvironment(Constants.endpoint.production);
 
       ctrl.execute(async () => {
         try {
@@ -362,7 +370,7 @@ const getAuthorizeCustomerPaymentProfile = async ({
         getRequest.getJSON()
       );
 
-      ctrl.setEnvironment(Constants.endpoint.production);
+      if (mode !== "test") ctrl.setEnvironment(Constants.endpoint.production);
 
       ctrl.execute(() => {
         try {
@@ -443,7 +451,7 @@ const updateAuthorizeSubscription = async ({ subscriptionId, productId }) => {
         updateRequest.getJSON()
       );
 
-      ctrl.setEnvironment(Constants.endpoint.production);
+      if (mode !== "test") ctrl.setEnvironment(Constants.endpoint.production);
 
       ctrl.execute(() => {
         try {
@@ -523,7 +531,7 @@ const updateAuthorizeCustomerPaymentProfile = async ({
       updateRequest.getJSON()
     );
 
-    ctrl.setEnvironment(Constants.endpoint.production);
+    if (mode !== "test") ctrl.setEnvironment(Constants.endpoint.production);
 
     ctrl.execute(() => {
       const apiResponse = ctrl.getResponse();
@@ -559,7 +567,7 @@ const cancelAuthorizeSubscription = async ({ subscriptionId }) => {
         cancelRequest.getJSON()
       );
 
-      ctrl.setEnvironment(Constants.endpoint.production);
+      if (mode !== "test") ctrl.setEnvironment(Constants.endpoint.production);
 
       ctrl.execute(function () {
         try {
