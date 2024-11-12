@@ -40,5 +40,7 @@ setInterval(async () => {
         `You have ${availableAds} available ads.`
       );
     }
-  } catch (error) {}
+  } catch (error) {
+    console.log(error);
+  }
 }, 10 * 60 * 1000);
