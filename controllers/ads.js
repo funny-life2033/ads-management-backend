@@ -210,7 +210,7 @@ const getRandomAds = async (req, res) => {
                 <img class="w-full h-full object-top object-cover md:w-48" src="${ad.banner}" alt="Smart advertisement image" id="adImage">
                 <script>
                   document.getElementById("adImage").onload = () => {
-                    document.getElementById("adImage").style.height = document.getElementById("adImage").clientHeight + "px";
+                    document.getElementById("adImage").style.height = document.getElementById("adImage").clientWidth + "px";
                   }
                 </script>
             </div>
