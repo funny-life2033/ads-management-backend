@@ -32,6 +32,7 @@ const getPlans = async (req, res) => {
       const { expired, isPending, product, nextPaymentDate, endDate } =
         await getAuthorizeSubscriptionStatus({
           subscriptionId: companyData.authorizeSubscriptionId,
+          includeTransactions: true,
         });
 
       return res.json({
@@ -76,6 +77,7 @@ const createSubscription = (req, res) => {
       try {
         const { product } = await getAuthorizeSubscriptionStatus({
           subscriptionId: companyData.authorizeSubscriptionId,
+          includeTransactions: true,
         });
 
         if (product) {
@@ -238,6 +240,7 @@ const checkSubcription = (req, res) => {
       const { expired, isPending, product, endDate, nextPaymentDate } =
         await getAuthorizeSubscriptionStatus({
           subscriptionId: companyData.authorizeSubscriptionId,
+          includeTransactions: true,
         });
       const {
         cardNumber,

@@ -23,6 +23,7 @@ setInterval(async () => {
         ) {
           const { expired, isPending } = await getAuthorizeSubscriptionStatus({
             subscriptionId: company.authorizeSubscriptionId,
+            includeTransactions: true,
           });
 
           if (!expired && !isPending) {
