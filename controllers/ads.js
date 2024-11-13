@@ -230,12 +230,12 @@ const getRandomAd = async (req, res) => {
   const isVertical =
     location === "vertical" ? true : location === "horizontal" ? false : null;
 
-  if (isVertical === null) return res.send(null);
+  if (isVertical === null) return res.json({});
   const ads = await Ads.find({ isVertical, isAvailable: true });
-  if (ads.length === 0) return res.send(null);
+  if (ads.length === 0) return res.json({});
   const randomAd = ads[Math.floor(Math.random() * ads.length)];
-  if (!randomAd.banner || randomAd.banner === "") return res.send(null);
-  return res.send(randomAd.banner);
+  if (!randomAd.banner || randomAd.banner === "") return res.json({});
+  return res.json({ banner: randomAd.banner, link: randomAd.link });
 };
 
 module.exports = { submitAds, getAds, getRandomAds, resetAds, getRandomAd };
