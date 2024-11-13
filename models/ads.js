@@ -3,17 +3,14 @@ const mongoose = require("mongoose");
 const adsSchema = new mongoose.Schema({
   banner: {
     type: String,
-  },
-  title: {
-    type: String,
-    required: true,
-  },
-  description: {
-    type: String,
     required: true,
   },
   link: {
     type: String,
+    required: true,
+  },
+  isVertical: {
+    type: Boolean,
     required: true,
   },
   companyId: {

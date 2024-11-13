@@ -6,14 +6,18 @@ const authRouter = require("./routes/authRoutes");
 const subsRouter = require("./routes/subsRoutes");
 const adsRouter = require("./routes/adsRoutes");
 const authMiddleware = require("./middlewares/auth");
-const { getRandomAds } = require("./controllers/ads");
+const { getRandomAd } = require("./controllers/ads");
 
 require("dotenv").config();
 require("./config/db")();
 
 const app = express();
 
-const allowedOrigins = ["https://vinylbayads.com", "https://vinylbay777.com"];
+const allowedOrigins = [
+  "https://vinylbayads.com",
+  "https://vinylbay777.com",
+  // "http://localhost:3000",
+];
 
 app.use(bodyParser.json({ limit: "50mb" }));
 app.use(
@@ -35,7 +39,7 @@ app.use(cookieParser());
 app.use("/api/auth", authRouter);
 app.use("/api/subscription", authMiddleware, subsRouter);
 app.use("/api/ads", authMiddleware, adsRouter);
-app.post("/api/randomAds", getRandomAds);
+app.post("/api/randomAd", getRandomAd);
 
 const PORT = process.env.PORT || 5000;
 

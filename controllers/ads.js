@@ -11,7 +11,7 @@ const shopify = new Shopify({
 
 const submitAds = async (req, res) => {
   const token = req.cookies.token;
-  const { title, description, link, banner } = req.body;
+  const { link, isVertical, banner } = req.body;
   if (
     banner &&
     typeof banner === "object" &&
@@ -22,12 +22,11 @@ const submitAds = async (req, res) => {
   )
     return res.status(400).json({ message: "Please input a valid image file" });
 
-  if (!title || title === "")
-    return res.status(400).json({ message: "Title is blank" });
-  if (!description || description === "")
-    return res.status(400).json({ message: "Description is blank" });
   if (!link || link === "")
     return res.status(400).json({ message: "Link is blank" });
+
+  if (isVertical === null || isVertical === undefined)
+    return res.status(400).json({ message: "Banner location is required" });
 
   jwt.verify(token, process.env.JWT_SECRET, async (err, company) => {
     if (err) {
@@ -67,9 +66,8 @@ const submitAds = async (req, res) => {
           ads.banner = public_url;
         }
 
-        ads.title = title;
-        ads.description = description;
         ads.link = link;
+        ads.isVertical = isVertical;
         await ads.save();
       } else {
         if (!banner)
@@ -78,10 +76,9 @@ const submitAds = async (req, res) => {
             .json({ message: "Please provide your banner" });
 
         const newAds = new Ads({
-          title,
-          description,
           link,
           companyId: companyData._id,
+          isVertical,
         });
 
         await newAds.save();
@@ -124,9 +121,8 @@ const getAds = async (req, res) => {
         return res.json({
           message: "Success",
           banner: ads.banner,
-          title: ads.title,
-          description: ads.description,
           link: ads.link,
+          isVertical: ads.isVertical,
         });
       } else {
         return res.json({ message: "You have not published any ads yet" });
@@ -214,13 +210,6 @@ const getRandomAds = async (req, res) => {
                   }
                 </script>
             </div>
-            <div class="p-8">
-                <div class="uppercase tracking-wide text-sm text-[#F79518] font-semibold" id="adTitle">${ad.title}</div>
-                <p class="mt-2 text-gray-500" id="adDescription">${ad.description}</p>
-                <div class="mt-4">
-                    <button class="inline-block px-4 py-2 leading-none border rounded text-[#F79518] border-[#F79518] hover:text-white hover:bg-[#F79518] transition-colors duration-300" id="adButton" onclick="redirectToParent('${ad.link}'); return false;">Learn More</button>
-                </div>
-            </div>
         </div>
     </div>
 </body>
@@ -236,4 +225,17 @@ const getRandomAds = async (req, res) => {
   }
 };
 
-module.exports = { submitAds, getAds, getRandomAds, resetAds };
+const getRandomAd = async (req, res) => {
+  const location = req.query.location;
+  const isVertical =
+    location === "vertical" ? true : location === "horizontal" ? false : null;
+
+  if (isVertical === null) return res.send(null);
+  const ads = await Ads.find({ isVertical, isAvailable: true });
+  if (ads.length === 0) return res.send(null);
+  const randomAd = ads[Math.floor(Math.random() * ads.length)];
+  if (!randomAd.banner || randomAd.banner === "") return res.send(null);
+  return res.send(randomAd.banner);
+};
+
+module.exports = { submitAds, getAds, getRandomAds, resetAds, getRandomAd };
