@@ -39,7 +39,7 @@ app.use(cookieParser());
 app.use("/api/auth", authRouter);
 app.use("/api/subscription", authMiddleware, subsRouter);
 app.use("/api/ads", authMiddleware, adsRouter);
-app.post("/api/randomAd", getRandomAd);
+app.get("/api/randomAd", getRandomAd);
 
 const PORT = process.env.PORT || 5000;
 
