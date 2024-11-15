@@ -1,9 +1,10 @@
 const express = require("express");
-const { submitAds, getAds, resetAds } = require("../controllers/ads");
+const { submitAd, getAds, getAd, removeAd } = require("../controllers/ads");
 const router = express.Router();
 
-router.post("/submit", submitAds);
+router.post("/submit", submitAd);
 router.get("/", getAds);
-router.get("/reset", resetAds);
+router.get("/get/:id", getAd);
+router.delete("/:id", removeAd);
 
 module.exports = router;

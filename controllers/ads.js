@@ -2,6 +2,7 @@ const Company = require("../models/company");
 const Ads = require("../models/ads");
 const jwt = require("jsonwebtoken");
 const Shopify = require("shopify-api-node");
+const { getAuthorizeSubscriptionStatus } = require("../config/authorize");
 require("dotenv").config();
 
 const shopify = new Shopify({
@@ -9,9 +10,9 @@ const shopify = new Shopify({
   accessToken: process.env.SHOPIFY_API_TOKEN,
 });
 
-const submitAds = async (req, res) => {
+const submitAd = async (req, res) => {
   const token = req.cookies.token;
-  const { link, isVertical, banner } = req.body;
+  const { link, isVertical, banner, id, isShown } = req.body;
   if (
     banner &&
     typeof banner === "object" &&
@@ -22,11 +23,13 @@ const submitAds = async (req, res) => {
   )
     return res.status(400).json({ message: "Please input a valid image file" });
 
-  if (!link || link === "")
-    return res.status(400).json({ message: "Link is blank" });
+  if (isShown === null || isShown === undefined) {
+    if (!link || link === "")
+      return res.status(400).json({ message: "Link is blank" });
 
-  if (isVertical === null || isVertical === undefined)
-    return res.status(400).json({ message: "Banner location is required" });
+    if (isVertical === null || isVertical === undefined)
+      return res.status(400).json({ message: "Banner location is required" });
+  }
 
   jwt.verify(token, process.env.JWT_SECRET, async (err, company) => {
     if (err) {
@@ -36,62 +39,122 @@ const submitAds = async (req, res) => {
       const companyData = await Company.findById(company.id);
       if (!companyData)
         return res.status(403).json({ message: "Token is invalid" });
-      const ads = await Ads.findOne({ companyId: companyData._id });
-      if (ads) {
-        if (!ads.banner && !banner)
+
+      const ad = await Ads.findById(id);
+
+      if (ad) {
+        if (!companyData._id.equals(ad.companyId)) {
+          return res
+            .status(400)
+            .json({ message: "You don't have access to this ad" });
+        }
+
+        if (!ad.banner && !banner) {
           return res
             .status(400)
             .json({ message: "Please provide your banner" });
-        if (ads.banner && banner) {
+        }
+        if (ad.banner && banner) {
           try {
             await shopify.asset.delete(process.env.SHOPIFY_THEME_ID, {
-              asset: { key: `assets/${ads._id}` },
+              asset: { key: `assets/${ad._id}` },
             });
           } catch (error) {
             console.log("deleting shopify assets:", error);
-            return res
-              .status(400)
-              .json({ message: "Please provide image file" });
           }
         }
 
         if (banner) {
-          const { public_url } = await shopify.asset.create(
-            process.env.SHOPIFY_THEME_ID,
-            {
-              key: `assets/${ads._id}`,
-              attachment: banner.base64.split(`data:${banner.type};base64,`)[1],
-            }
-          );
-          ads.banner = public_url;
+          try {
+            const { public_url } = await shopify.asset.create(
+              process.env.SHOPIFY_THEME_ID,
+              {
+                key: `assets/${ad._id}`,
+                attachment: banner.base64.split(
+                  `data:${banner.type};base64,`
+                )[1],
+              }
+            );
+            ad.banner = public_url;
+          } catch (error) {
+            return res
+              .status(400)
+              .json({ message: "Please provide valid image file" });
+          }
         }
 
-        ads.link = link;
-        ads.isVertical = isVertical;
-        await ads.save();
+        ad.link = link;
+        ad.isVertical = isVertical;
+
+        if (isShown === true) {
+          const { product } = await getAuthorizeSubscriptionStatus({
+            subscriptionId: companyData.authorizeSubscriptionId,
+            includeTransactions: true,
+          });
+          const shownAds = await Ads.find({
+            companyId: companyData._id,
+            isShown: true,
+          });
+
+          if (
+            product &&
+            shownAds.filter((other) => other._id !== ad._id).length <
+              product.ads
+          ) {
+            ad.isShown = true;
+          } else {
+            return res
+              .status(400)
+              .json({ message: "You have reached maximum number of ads" });
+          }
+        } else if (isShown === false) {
+          ad.isShown = false;
+        }
+        await ad.save();
       } else {
         if (!banner)
           return res
             .status(400)
             .json({ message: "Please provide your banner" });
 
-        const newAds = new Ads({
+        const newAd = new Ads({
           link,
           companyId: companyData._id,
           isVertical,
         });
 
-        await newAds.save();
+        const { product } = await getAuthorizeSubscriptionStatus({
+          subscriptionId: companyData.authorizeSubscriptionId,
+          includeTransactions: true,
+        });
+        const shownAds = await Ads.find({
+          companyId: companyData._id,
+          isShown: true,
+        });
+        if (shownAds.length < product.ads) {
+          newAd.isShown = true;
+        } else {
+          newAd.isShown = false;
+        }
 
-        const { public_url } = await shopify.asset.create(
-          process.env.SHOPIFY_THEME_ID,
-          {
-            key: `assets/${newAds._id}`,
-            attachment: banner.base64.split(`data:${banner.type};base64,`)[1],
-          }
-        );
-        newAds.banner = public_url;
-        await newAds.save();
+        await newAd.save();
+
+        try {
+          const { public_url } = await shopify.asset.create(
+            process.env.SHOPIFY_THEME_ID,
+            {
+              key: `assets/${newAd._id}`,
+              attachment: banner.base64.split(`data:${banner.type};base64,`)[1],
+            }
+          );
+          newAd.banner = public_url;
+          await newAd.save();
+        } catch (error) {
+          await newAd.deleteOne();
+          return res
+            .status(400)
+            .json({ message: "Please provide valid image file" });
+        }
       }
 
       res.json({ message: "Successfully submitted!" });
@@ -115,26 +178,31 @@ const getAds = async (req, res) => {
       if (!companyData)
         return res.status(403).json({ message: "Token is invalid" });
 
-      const ads = await Ads.findOne({ companyId: companyData._id });
+      const ads = await Ads.find({ companyId: companyData._id });
 
-      if (ads) {
-        return res.json({
-          message: "Success",
-          banner: ads.banner,
-          link: ads.link,
-          isVertical: ads.isVertical,
-        });
-      } else {
-        return res.json({ message: "You have not published any ads yet" });
-      }
+      return res.json({
+        message: "Success",
+        ads: ads.map((ad) => ({
+          id: ad._id,
+          banner: ad.banner,
+          link: ad.link,
+          isShown: ad.isShown,
+        })),
+      });
     } catch (error) {
       return res.status(500).json({ message: "Server error!" });
     }
   });
 };
 
-const resetAds = async (req, res) => {
+const getAd = async (req, res) => {
   const token = req.cookies.token;
+  const id = req.params.id;
+
+  const ad = await Ads.findById(id);
+  if (!ad) {
+    return res.status(400).json({ message: "The ad doesn't exist" });
+  }
 
   jwt.verify(token, process.env.JWT_SECRET, async (err, company) => {
     if (err) {
@@ -146,83 +214,62 @@ const resetAds = async (req, res) => {
       if (!companyData)
         return res.status(403).json({ message: "Token is invalid" });
 
-      const ad = await Ads.findOne({ companyId: companyData._id });
-      if (ad) {
-        await shopify.asset.delete(process.env.SHOPIFY_THEME_ID, {
-          asset: { key: `assets/${ad._id}` },
+      if (companyData._id.equals(ad.companyId)) {
+        return res.json({
+          message: "Success",
+          banner: ad.banner,
+          link: ad.link,
+          isVertical: ad.isVertical,
         });
-        await ad.deleteOne();
+      } else {
+        return res
+          .status(400)
+          .json({ message: "You don't have access to this ad" });
       }
-      res.json({ message: "Successfully reset!" });
-    } catch (err) {
-      return res.status(400).json({ message: "resetting failed!" });
+    } catch (error) {
+      return res.status(500).json({ message: "Server error!" });
     }
   });
 };
 
-const getRandomAds = async (req, res) => {
-  const count = parseInt(req.body.count);
-  if (isNaN(count) || count === 0) {
-    return res.json([]);
+const removeAd = async (req, res) => {
+  const token = req.cookies.token;
+  const id = req.params.id;
+
+  const ad = await Ads.findById(id);
+  if (!ad) {
+    return res.status(400).json({ message: "The ad doesn't exist" });
   }
 
-  try {
-    const ads = await Ads.find({ isAvailable: true });
-    if (ads.length) {
-      const requiredAds = [];
-
-      if (ads.length <= count) {
-        requiredAds.push(...Array.from(ads));
-      } else {
-        const randomNos = [];
-        while (requiredAds.length < count) {
-          const randomNo = Math.floor(Math.random() * ads.length);
-          if (!randomNos.includes(randomNo)) {
-            randomNos.push(randomNo);
-            requiredAds.push(ads[randomNo]);
-          }
-        }
-      }
-
-      res.json(
-        requiredAds.map(
-          (ad) => `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Ads Section</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      function redirectToParent(url) {
-        window.parent.open(url,'_blank');
-      }
-    </script>
-</head>
-<body class="p-4">
-    <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl" id="adSection">
-        <div class="md:flex">
-            <div class="md:flex-shrink-0">
-                <img class="w-full h-full object-top object-cover md:w-48" src="${ad.banner}" alt="Smart advertisement image" id="adImage">
-                <script>
-                  document.getElementById("adImage").onload = () => {
-                    document.getElementById("adImage").style.height = document.getElementById("adImage").clientWidth + "px";
-                  }
-                </script>
-            </div>
-        </div>
-    </div>
-</body>
-</html>`
-        )
-      );
-    } else {
-      res.json([]);
+  jwt.verify(token, process.env.JWT_SECRET, async (err, company) => {
+    if (err) {
+      return res.status(403).json({ message: "Token is invalid" });
     }
-  } catch (error) {
-    console.log("getting random ads:", error);
-    res.json([]);
-  }
+
+    try {
+      const companyData = await Company.findById(company.id);
+      if (!companyData)
+        return res.status(403).json({ message: "Token is invalid" });
+
+      if (companyData._id.equals(ad.companyId)) {
+        try {
+          await shopify.asset.delete(process.env.SHOPIFY_THEME_ID, {
+            asset: { key: `assets/${ad._id}` },
+          });
+        } catch (error) {}
+
+        await ad.deleteOne();
+        res.json({ message: "Successfully removed!" });
+      } else {
+        return res
+          .status(400)
+          .json({ message: "You don't have access to this ad" });
+      }
+    } catch (err) {
+      console.log("removing ad err:", err);
+      return res.status(400).json({ message: "resetting failed!" });
+    }
+  });
 };
 
 const getRandomAd = async (req, res) => {
@@ -231,11 +278,18 @@ const getRandomAd = async (req, res) => {
     location === "vertical" ? true : location === "horizontal" ? false : null;
 
   if (isVertical === null) return res.json({});
-  const ads = await Ads.find({ isVertical, isAvailable: true });
+  let ads = await Ads.find({ isVertical, isAvailable: true, isShown: true });
+  ads = ads.filter((ad) => ad.banner && ad.banner !== "");
   if (ads.length === 0) return res.json({});
   const randomAd = ads[Math.floor(Math.random() * ads.length)];
   if (!randomAd.banner || randomAd.banner === "") return res.json({});
   return res.json({ banner: randomAd.banner, link: randomAd.link });
 };
 
-module.exports = { submitAds, getAds, getRandomAds, resetAds, getRandomAd };
+module.exports = {
+  submitAd,
+  getAds,
+  getAd,
+  removeAd,
+  getRandomAd,
+};

@@ -12,24 +12,36 @@ require("./config/db")()
           `You have ${ads.length} ads totally`
         );
         let availableAds = 0;
+        const activeCompanies = [];
+        const inactiveCompanies = [];
         for (const ad of ads) {
           ad.isAvailable = false;
           try {
-            const company = await Company.findById(ad.companyId);
-            if (
-              company &&
-              company.authorizeSubscriptionId &&
-              company.authorizeSubscriptionId !== ""
-            ) {
-              const { expired, isPending } =
-                await getAuthorizeSubscriptionStatus({
-                  subscriptionId: company.authorizeSubscriptionId,
-                  includeTransactions: true,
-                });
+            if (activeCompanies.includes(ad.companyId)) {
+              ad.isAvailable = true;
+              availableAds++;
+            } else if (!inactiveCompanies.includes(ad.companyId)) {
+              const company = await Company.findById(ad.companyId);
+              if (
+                company &&
+                company.authorizeSubscriptionId &&
+                company.authorizeSubscriptionId !== ""
+              ) {
+                const { expired, isPending } =
+                  await getAuthorizeSubscriptionStatus({
+                    subscriptionId: company.authorizeSubscriptionId,
+                    includeTransactions: true,
+                  });
 
-              if (!expired && !isPending) {
-                ad.isAvailable = true;
-                availableAds++;
+                if (!expired && !isPending) {
+                  ad.isAvailable = true;
+                  availableAds++;
+                  activeCompanies.push(ad.companyId);
+                } else {
+                  inactiveCompanies.push(ad.companyId);
+                }
+              } else if (company) {
+                inactiveCompanies.push(ad.companyId);
               }
             }
           } catch (error) {}

@@ -41,8 +41,12 @@ const getPlans = async (req, res) => {
           ...p,
           isYourPlan: !expired && p.id === product.id,
           isPending: !expired && p.id === product.id && isPending,
-          nextPaymentDate: !expired && !isPending && nextPaymentDate,
-          endDate: !expired && !isPending && endDate,
+          nextPaymentDate:
+            p.id === product.id
+              ? !expired && !isPending && nextPaymentDate
+              : null,
+          endDate:
+            p.id === product.id ? !expired && !isPending && endDate : null,
         })),
       });
     } catch (_) {

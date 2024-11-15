@@ -3,7 +3,6 @@ const mongoose = require("mongoose");
 const adsSchema = new mongoose.Schema({
   banner: {
     type: String,
-    required: true,
   },
   link: {
     type: String,
@@ -17,10 +16,14 @@ const adsSchema = new mongoose.Schema({
     type: mongoose.Types.ObjectId,
     ref: "company",
     required: true,
-    unique: true,
   },
   isAvailable: {
     type: Boolean,
+  },
+  isShown: {
+    type: Boolean,
+    required: true,
+    default: false,
   },
 });
 
