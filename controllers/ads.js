@@ -41,7 +41,6 @@ const submitAd = async (req, res) => {
         return res.status(403).json({ message: "Token is invalid" });
 
       const ad = await Ads.findById(id);
-      console.log(ad);
 
       if (ad) {
         if (!companyData._id.equals(ad.companyId)) {
@@ -84,8 +83,9 @@ const submitAd = async (req, res) => {
           }
         }
 
-        ad.link = link;
-        ad.isVertical = isVertical;
+        if (link) ad.link = link;
+        if (ad.isVertical === true || ad.isVertical === false)
+          ad.isVertical = isVertical;
 
         if (isShown === true) {
           const { product } = await getAuthorizeSubscriptionStatus({
