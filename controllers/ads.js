@@ -111,7 +111,11 @@ const submitAd = async (req, res) => {
         } else if (isShown === false) {
           ad.isShown = false;
         }
-        await ad.save();
+        try {
+          await ad.save();
+        } catch (error) {
+          console.log("saving error:", error);
+        }
       } else {
         if (!banner)
           return res
