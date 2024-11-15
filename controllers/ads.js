@@ -133,7 +133,7 @@ const submitAd = async (req, res) => {
           companyId: companyData._id,
           isShown: true,
         });
-        if (shownAds.length < product.ads) {
+        if (product && shownAds.length < product.ads) {
           newAd.isShown = true;
         } else {
           newAd.isShown = false;
