@@ -41,6 +41,7 @@ const submitAd = async (req, res) => {
         return res.status(403).json({ message: "Token is invalid" });
 
       const ad = await Ads.findById(id);
+      console.log(ad);
 
       if (ad) {
         if (!companyData._id.equals(ad.companyId)) {
