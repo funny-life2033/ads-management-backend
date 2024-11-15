@@ -84,7 +84,7 @@ const submitAd = async (req, res) => {
         }
 
         if (link) ad.link = link;
-        if (ad.isVertical === true || ad.isVertical === false)
+        if (isVertical === true || isVertical === false)
           ad.isVertical = isVertical;
 
         if (isShown === true) {
@@ -112,7 +112,6 @@ const submitAd = async (req, res) => {
           ad.isShown = false;
         }
 
-        console.log(JSON.stringify(ad, null, 2));
         await ad.save();
       } else {
         if (!banner)
