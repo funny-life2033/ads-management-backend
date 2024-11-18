@@ -10,7 +10,7 @@ require("dotenv").config();
 const shopify = new Shopify({
   shopName: process.env.SHOP_NAME,
   accessToken: process.env.SHOPIFY_API_TOKEN,
-  timeout: 300000,
+  timeout: 600000,
 });
 
 const submitAd = async (req, res) => {
