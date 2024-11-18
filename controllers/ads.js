@@ -3,25 +3,33 @@ const Ads = require("../models/ads");
 const jwt = require("jsonwebtoken");
 const Shopify = require("shopify-api-node");
 const { getAuthorizeSubscriptionStatus } = require("../config/authorize");
+// const fs = require("fs");
+// const path = require("path");
 require("dotenv").config();
 
 const shopify = new Shopify({
   shopName: process.env.SHOP_NAME,
   accessToken: process.env.SHOPIFY_API_TOKEN,
+  timeout: 300000,
 });
 
 const submitAd = async (req, res) => {
   const token = req.cookies.token;
   const { link, isVertical, banner, id, isShown } = req.body;
+  // fs.writeFileSync(path.join(__dirname, "video"), banner.base64, "utf8");
   if (
     banner &&
     typeof banner === "object" &&
     (!banner.type ||
       !banner.base64 ||
-      !banner.type.startsWith("image/") ||
-      !banner.base64.includes("data:image/"))
+      ((!banner.type.startsWith("image/") ||
+        !banner.base64.includes("data:image/")) &&
+        (!banner.type.startsWith("video/") ||
+          !banner.base64.includes("data:video/"))))
   )
-    return res.status(400).json({ message: "Please input a valid image file" });
+    return res
+      .status(400)
+      .json({ message: "Please input a valid image / video file" });
 
   if (isShown === null || isShown === undefined) {
     if (!link || link === "")
@@ -76,7 +84,10 @@ const submitAd = async (req, res) => {
               }
             );
             ad.banner = public_url;
+            if (banner.type.startsWith("image/")) ad.bannerType = "image";
+            else ad.bannerType = "video";
           } catch (error) {
+            console.log("uploading shopify assets:", error);
             return res
               .status(400)
               .json({ message: "Please provide valid image file" });
@@ -150,12 +161,15 @@ const submitAd = async (req, res) => {
             }
           );
           newAd.banner = public_url;
+          if (banner.type.startsWith("image/")) newAd.bannerType = "image";
+          else newAd.bannerType = "video";
           await newAd.save();
         } catch (error) {
+          console.log("uploading asset err:", error);
           await newAd.deleteOne();
           return res
             .status(400)
-            .json({ message: "Please provide valid image file" });
+            .json({ message: "Please provide valid image / video file" });
         }
       }
 

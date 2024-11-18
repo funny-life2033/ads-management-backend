@@ -4,6 +4,10 @@ const adsSchema = new mongoose.Schema({
   banner: {
     type: String,
   },
+  bannerType: {
+    type: String,
+    enum: ["image", "video"],
+  },
   link: {
     type: String,
     required: true,

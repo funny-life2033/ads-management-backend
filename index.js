@@ -16,10 +16,10 @@ const app = express();
 const allowedOrigins = [
   "https://vinylbayads.com",
   "https://vinylbay777.com",
-  // "http://localhost:3000",
+  "http://localhost:3000",
 ];
 
-app.use(bodyParser.json({ limit: "50mb" }));
+app.use(bodyParser.json({ limit: "1024mb" }));
 app.use(
   cors({
     origin: (origin, callback) => {
