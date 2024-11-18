@@ -201,6 +201,7 @@ const getAds = async (req, res) => {
         ads: ads.map((ad) => ({
           id: ad._id,
           banner: ad.banner,
+          bannerType: ad.bannerType,
           link: ad.link,
           isShown: ad.isShown,
         })),
