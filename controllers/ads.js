@@ -236,6 +236,7 @@ const getAd = async (req, res) => {
           banner: ad.banner,
           link: ad.link,
           isVertical: ad.isVertical,
+          bannerType: ad.bannerType,
         });
       } else {
         return res
