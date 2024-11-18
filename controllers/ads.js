@@ -301,7 +301,11 @@ const getRandomAd = async (req, res) => {
   if (ads.length === 0) return res.json({});
   const randomAd = ads[Math.floor(Math.random() * ads.length)];
   if (!randomAd.banner || randomAd.banner === "") return res.json({});
-  return res.json({ banner: randomAd.banner, link: randomAd.link });
+  return res.json({
+    banner: randomAd.banner,
+    bannerType: randomAd.bannerType,
+    link: randomAd.link,
+  });
 };
 
 module.exports = {
