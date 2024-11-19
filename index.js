@@ -6,7 +6,11 @@ const authRouter = require("./routes/authRoutes");
 const subsRouter = require("./routes/subsRoutes");
 const adsRouter = require("./routes/adsRoutes");
 const authMiddleware = require("./middlewares/auth");
-const { getRandomAd } = require("./controllers/ads");
+const {
+  getRandomAd,
+  increaseViews,
+  increaseClicks,
+} = require("./controllers/ads");
 
 require("dotenv").config();
 require("./config/db")();
@@ -40,6 +44,8 @@ app.use("/api/auth", authRouter);
 app.use("/api/subscription", authMiddleware, subsRouter);
 app.use("/api/ads", authMiddleware, adsRouter);
 app.get("/api/randomAd", getRandomAd);
+app.get("/api/increaseViews/:id", increaseViews);
+app.get("/api/increaseClicks/:id", increaseClicks);
 
 const PORT = process.env.PORT || 5000;
 
