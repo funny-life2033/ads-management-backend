@@ -212,6 +212,8 @@ const getAds = async (req, res) => {
       const now = new Date(new Date().toUTCString());
       const views = {};
 
+      console.log("ads status:", adsStatus);
+
       for (const ad of ads) {
         const status = adsStatus.find((status) => status.adId === ad._id);
         if (status) {
