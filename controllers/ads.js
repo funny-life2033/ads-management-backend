@@ -3,6 +3,7 @@ const Ads = require("../models/ads");
 const jwt = require("jsonwebtoken");
 const Shopify = require("shopify-api-node");
 const { getAuthorizeSubscriptionStatus } = require("../config/authorize");
+const AdStatus = require("../models/adStatus");
 // const fs = require("fs");
 // const path = require("path");
 require("dotenv").config();
@@ -12,6 +13,11 @@ const shopify = new Shopify({
   accessToken: process.env.SHOPIFY_API_TOKEN,
   timeout: 600000,
 });
+
+const areSameDate = (date1, date2) =>
+  date1.getFullYear() === date2.getFullYear() &&
+  date1.getMonth() === date2.getMonth() &&
+  date1.getDate() === date2.getDate();
 
 const submitAd = async (req, res) => {
   const token = req.cookies.token;
@@ -167,6 +173,10 @@ const submitAd = async (req, res) => {
         } catch (error) {
           console.log("uploading asset err:", error);
           await newAd.deleteOne();
+          if (error.response && error.response.status === 413)
+            return res.status(413).json({
+              message: "too large image / video. Maximum size is 10MB",
+            });
           return res
             .status(400)
             .json({ message: "Please provide valid image / video file" });
@@ -196,6 +206,29 @@ const getAds = async (req, res) => {
 
       const ads = await Ads.find({ companyId: companyData._id });
 
+      const adsStatus = await AdStatus.find({
+        adId: { $in: ads.map((ad) => ad._id) },
+      });
+      const now = new Date(new Date().toUTCString());
+      const views = {};
+
+      for (const ad of ads) {
+        const status = adsStatus.find((status) => status.adId === ad._id);
+        if (status) {
+          const totalViews = status.views.reduce(
+            (prev, curr) => prev + curr.views,
+            0
+          );
+          const todayViews =
+            status.views.find((views) => areSameDate(views.date, now))?.views ||
+            0;
+
+          views[ad._id.toString()] = { totalViews, todayViews };
+        } else {
+          views[ad._id.toString()] = { totalViews: 0, todayViews: 0 };
+        }
+      }
+
       return res.json({
         message: "Success",
         ads: ads.map((ad) => ({
@@ -204,6 +237,7 @@ const getAds = async (req, res) => {
           bannerType: ad.bannerType,
           link: ad.link,
           isShown: ad.isShown,
+          views: views[ad._id.toString()],
         })),
       });
     } catch (error) {
@@ -302,10 +336,85 @@ const getRandomAd = async (req, res) => {
   const randomAd = ads[Math.floor(Math.random() * ads.length)];
   if (!randomAd.banner || randomAd.banner === "") return res.json({});
   return res.json({
+    id: randomAd._id,
     banner: randomAd.banner,
     bannerType: randomAd.bannerType,
     link: randomAd.link,
   });
+};
+
+const increaseViews = async (req, res) => {
+  const id = req.params.id;
+  if (!id || id === "")
+    return res.status(400).json({ message: "Provide valid id" });
+  const adStatus = await AdStatus.findOne({ adId: id });
+  const now = new Date(new Date().toUTCString());
+  if (adStatus) {
+    const views = adStatus.views.find((view) => areSameDate(view.date, now));
+    if (views) {
+      views.views++;
+    } else {
+      adStatus.views.push({
+        views: 1,
+        date: new Date(now.getFullYear(), now.getMonth(), now.getDate()),
+      });
+    }
+
+    await adStatus.save();
+  } else {
+    const ad = await Ads.findById(id);
+    if (!ad) return res.status(400).json({ message: "Provide valid id" });
+    await AdStatus.create({
+      adId: ad._id,
+      views: [
+        {
+          views: 1,
+          date: new Date(now.getFullYear(), now.getMonth(), now.getDate()),
+        },
+      ],
+      clicks: [],
+    });
+  }
+
+  res.json({ message: "Successfully saved!" });
+};
+
+const increaseClicks = async (req, res) => {
+  const id = req.params.id;
+  if (!id || id === "")
+    return res.status(400).json({ message: "Provide valid id" });
+  const adStatus = await AdStatus.findOne({ adId: id });
+  const now = new Date(new Date().toUTCString());
+  if (adStatus) {
+    const clicks = adStatus.clicks.find((clicks) =>
+      areSameDate(clicks.date, now)
+    );
+    if (clicks) {
+      clicks.clicks++;
+    } else {
+      adStatus.clicks.push({
+        clicks: 1,
+        date: new Date(now.getFullYear(), now.getMonth(), now.getDate()),
+      });
+    }
+
+    await adStatus.save();
+  } else {
+    const ad = await Ads.findById(id);
+    if (!ad) return res.status(400).json({ message: "Provide valid id" });
+    await AdStatus.create({
+      adId: ad._id,
+      clicks: [
+        {
+          clicks: 1,
+          date: new Date(now.getFullYear(), now.getMonth(), now.getDate()),
+        },
+      ],
+      views: [],
+    });
+  }
+
+  res.json({ message: "Successfully saved!" });
 };
 
 module.exports = {
@@ -314,4 +423,6 @@ module.exports = {
   getAd,
   removeAd,
   getRandomAd,
+  increaseViews,
+  increaseClicks,
 };
