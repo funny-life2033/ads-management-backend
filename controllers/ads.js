@@ -213,9 +213,8 @@ const getAds = async (req, res) => {
       const views = {};
 
       for (const ad of ads) {
-        const status = adsStatus.find((status) => status.adId === ad._id);
+        const status = adsStatus.find((status) => ad._id.equals(status.adId));
         if (status) {
-          console.log("status:", JSON.stringify(status.views, null, 2));
           const totalViews = status.views.reduce(
             (prev, curr) => prev + curr.views,
             0
@@ -229,8 +228,6 @@ const getAds = async (req, res) => {
           views[ad._id.toString()] = { totalViews: 0, todayViews: 0 };
         }
       }
-
-      console.log(JSON.stringify(views, null, 2));
 
       return res.json({
         message: "Success",
