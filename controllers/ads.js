@@ -229,6 +229,8 @@ const getAds = async (req, res) => {
         }
       }
 
+      console.log(JSON.stringify(views, null, 2));
+
       return res.json({
         message: "Success",
         ads: ads.map((ad) => ({
