@@ -3,7 +3,8 @@ const products = require("./products");
 
 require("dotenv").config();
 
-const mode = "test";
+// const mode = "test";
+const mode = "live";
 
 const merchantAuthenticationType =
   new APIContracts.MerchantAuthenticationType();
