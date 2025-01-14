@@ -23,6 +23,14 @@ const companySchema = new mongoose.Schema({
   authorizeCustomerPaymentProfileId: {
     type: String,
   },
+  isAdmin: {
+    type: Boolean,
+    default: false,
+  },
+  isBlocked: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const Company = mongoose.model("Company", companySchema);

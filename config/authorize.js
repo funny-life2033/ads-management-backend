@@ -192,9 +192,11 @@ const createAuthorizeSubscriptionFromCustomerProfile = async ({
   });
 };
 
-const getAuthorizeSubscriptionStatus = async (
-  { subscriptionId, includeTransactions } = { includeTransactions: true }
-) => {
+const getAuthorizeSubscriptionStatus = async ({
+  subscriptionId,
+  includeTransactions,
+}) => {
+  if (!subscriptionId || subscriptionId === "") return {};
   return new Promise((res, err) => {
     try {
       const getRequest = new APIContracts.ARBGetSubscriptionRequest();
@@ -210,7 +212,7 @@ const getAuthorizeSubscriptionStatus = async (
       ctrl.execute(async () => {
         try {
           const apiResponse = ctrl.getResponse();
-          console.log(JSON.stringify(apiResponse, null, 2));
+          console.log("api response:", JSON.stringify(apiResponse, null, 2));
           const response = new APIContracts.ARBGetSubscriptionResponse(
             apiResponse
           );
@@ -335,7 +337,7 @@ const getAuthorizeSubscriptionStatus = async (
                   });
                   res(res_);
                 } catch (err_) {
-                  err(err_);
+                  err("----------------------", err_);
                 }
               }
               err(response.getMessages().getMessage()[0].getText());

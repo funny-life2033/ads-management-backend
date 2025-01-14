@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const adStatusSchema = new mongoose.Schema({
   adId: {
-    type: mongoose.Types.ObjectId,
+    type: mongoose.Schema.Types.ObjectId,
     ref: "ads",
     required: true,
   },

@@ -22,10 +22,13 @@ require("./config/db")()
               availableAds++;
             } else if (!inactiveCompanies.includes(ad.companyId)) {
               const company = await Company.findById(ad.companyId);
-              if (
+              if (company && company.isAdmin) {
+                activeCompanies.push(ad.companyId);
+              } else if (
                 company &&
                 company.authorizeSubscriptionId &&
-                company.authorizeSubscriptionId !== ""
+                company.authorizeSubscriptionId !== "" &&
+                !company.isBlocked
               ) {
                 const { expired, isPending } =
                   await getAuthorizeSubscriptionStatus({

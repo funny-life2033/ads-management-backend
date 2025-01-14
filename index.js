@@ -5,12 +5,14 @@ const cookieParser = require("cookie-parser");
 const authRouter = require("./routes/authRoutes");
 const subsRouter = require("./routes/subsRoutes");
 const adsRouter = require("./routes/adsRoutes");
+const companyRouter = require("./routes/companyRoutes");
 const authMiddleware = require("./middlewares/auth");
 const {
   getRandomAd,
   increaseViews,
   increaseClicks,
 } = require("./controllers/ads");
+const adminMiddleware = require("./middlewares/admin");
 
 require("dotenv").config();
 require("./config/db")();
@@ -20,7 +22,7 @@ const app = express();
 const allowedOrigins = [
   "https://vinylbayads.com",
   "https://vinylbay777.com",
-  // "http://localhost:3000",
+  "http://localhost:3000",
 ];
 
 app.use(bodyParser.json({ limit: "1024mb" }));
@@ -43,6 +45,7 @@ app.use(cookieParser());
 app.use("/api/auth", authRouter);
 app.use("/api/subscription", authMiddleware, subsRouter);
 app.use("/api/ads", authMiddleware, adsRouter);
+app.use("/api/company", adminMiddleware, companyRouter);
 app.get("/api/randomAd", getRandomAd);
 app.get("/api/increaseViews/:id", increaseViews);
 app.get("/api/increaseClicks/:id", increaseClicks);

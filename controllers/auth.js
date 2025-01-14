@@ -27,6 +27,9 @@ const register = async (req, res) => {
       secure: false,
       sameSite: "Strict",
     });
+    res.cookie("isAdmin", false, {
+      sameSite: "Strict",
+    });
     res.json({ message: "You have successfully registered!" });
   } catch (error) {
     console.log("error in new company registration:", error);
@@ -48,11 +51,15 @@ const login = async (req, res) => {
     expiresIn: "24h",
   });
   res.cookie("token", token, { sameSite: "Strict" });
+  res.cookie("isAdmin", company.isAdmin, {
+    sameSite: "Strict",
+  });
   res.json({ message: "You have successfully logged in!" });
 };
 
 const logout = async (req, res) => {
   res.clearCookie("token");
+  res.clearCookie("isAdmin");
   res.json({ message: "Logged out!" });
 };
 

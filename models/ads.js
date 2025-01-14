@@ -17,7 +17,7 @@ const adsSchema = new mongoose.Schema({
     required: true,
   },
   companyId: {
-    type: mongoose.Types.ObjectId,
+    type: mongoose.Schema.Types.ObjectId,
     ref: "company",
     required: true,
   },
