@@ -7,7 +7,7 @@ const {
   getAuthorizeCustomerPaymentProfile,
   createAuthorizeSubscriptionFromCustomerProfile,
 } = require("../config/authorize");
-const products = require("../config/products");
+const Product = require("../models/product");
 const Company = require("../models/company");
 const jwt = require("jsonwebtoken");
 
@@ -16,6 +16,16 @@ const getPlans = async (req, res) => {
   if (!companyData)
     return res.status(403).json({ message: "Token is invalid" });
 
+  const productsData = await Product.find({});
+  const products = productsData.map((product) => ({
+    id: product._id.toString(),
+    title: product.title,
+    description: product.description,
+    price: product.price,
+    interval: product.interval,
+    color: product.color,
+    ads: product.ads,
+  }));
   if (
     !companyData.authorizeSubscriptionId ||
     companyData.authorizeSubscriptionId === ""
@@ -51,12 +61,19 @@ const getPlans = async (req, res) => {
 };
 
 const createSubscription = async (req, res) => {
-  const requiringProduct = products.find(
-    (product) => product.id === req.body.productId
-  );
-  if (!requiringProduct) {
+  const requiringProductData = await Product.findById(req.body.productId);
+  if (!requiringProductData) {
     return res.status(400).json({ message: "Invalid membership ID!" });
   }
+  const requiringProduct = {
+    id: requiringProductData._id.toString(),
+    title: requiringProductData.title,
+    description: requiringProductData.description,
+    price: requiringProductData.price,
+    interval: requiringProductData.interval,
+    color: requiringProductData.color,
+    ads: requiringProductData.ads,
+  };
   const companyData = await Company.findById(req.company.id);
   if (!companyData)
     return res.status(403).json({ message: "Token is invalid" });

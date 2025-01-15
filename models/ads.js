@@ -29,6 +29,10 @@ const adsSchema = new mongoose.Schema({
     required: true,
     default: false,
   },
+  isBlocked: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const Ads = mongoose.model("Ads", adsSchema);

@@ -15,6 +15,7 @@ require("./config/db")()
         const activeCompanies = [];
         const inactiveCompanies = [];
         for (const ad of ads) {
+          if (ad.isBlocked) continue;
           ad.isAvailable = false;
           try {
             if (activeCompanies.includes(ad.companyId)) {
@@ -23,6 +24,8 @@ require("./config/db")()
             } else if (!inactiveCompanies.includes(ad.companyId)) {
               const company = await Company.findById(ad.companyId);
               if (company && company.isAdmin) {
+                ad.isAvailable = true;
+                availableAds++;
                 activeCompanies.push(ad.companyId);
               } else if (
                 company &&

@@ -1,5 +1,5 @@
 const { APIContracts, APIControllers, Constants } = require("authorizenet");
-const products = require("./products");
+const Product = require("../models/product");
 
 require("dotenv").config();
 
@@ -38,10 +38,18 @@ const createAuthorizeSubscription = async ({
   zipCode,
   country,
 }) => {
-  const product = products.find((product) => product.id === productId);
+  const productData = await Product.findById(productId);
+  if (!productData) throw new Error("Invalid plan");
+  const product = {
+    id: productData._id.toString(),
+    title: productData.title,
+    description: productData.description,
+    price: productData.price,
+    interval: productData.interval,
+    color: productData.color,
+    ads: productData.ads,
+  };
   return new Promise((res, err) => {
-    if (!product) return err("Invalid plan");
-
     try {
       const interval = new APIContracts.PaymentScheduleType.Interval();
       interval.setLength(1);
@@ -134,10 +142,18 @@ const createAuthorizeSubscriptionFromCustomerProfile = async ({
   customerPaymentProfileId,
   productId,
 }) => {
-  const product = products.find((product) => product.id === productId);
+  const productData = await Product.findById(productId);
+  if (!productData) throw new Error("Invalid plan");
+  const product = {
+    id: productData._id.toString(),
+    title: productData.title,
+    description: productData.description,
+    price: productData.price,
+    interval: productData.interval,
+    color: productData.color,
+    ads: productData.ads,
+  };
   return new Promise((res, err) => {
-    if (!product) return err("Invalid plan");
-
     const interval = new APIContracts.PaymentScheduleType.Interval();
     interval.setLength(1);
     interval.setUnit(APIContracts.ARBSubscriptionUnitEnum.MONTHS);
@@ -223,11 +239,8 @@ const getAuthorizeSubscriptionStatus = async ({
               APIContracts.MessageTypeEnum.OK
             ) {
               const productId = response.getSubscription().getName();
-              const product = products.find(
-                (product) => product.id === productId
-              );
-
-              if (!product) {
+              const productData = await Product.findById(productId);
+              if (!productData) {
                 try {
                   await cancelAuthorizeSubscription({ subscriptionId });
                 } catch (error) {}
@@ -237,6 +250,16 @@ const getAuthorizeSubscriptionStatus = async ({
                   message: "You are not in right plan",
                 });
               }
+              const product = {
+                id: productData._id.toString(),
+                title: productData.title,
+                description: productData.description,
+                price: productData.price,
+                interval: productData.interval,
+                color: productData.color,
+                ads: productData.ads,
+              };
+
               const startDate = new Date(
                 response.getSubscription().getPaymentSchedule().getStartDate()
               );
@@ -435,11 +458,19 @@ const getAuthorizeCustomerPaymentProfile = async ({
 };
 
 const updateAuthorizeSubscription = async ({ subscriptionId, productId }) => {
-  const product = products.find((product) => product.id === productId);
+  const productData = await Product.findById(productId);
+  if (!productData) throw new Error("Invalid plan");
+  const product = {
+    id: productData._id.toString(),
+    title: productData.title,
+    description: productData.description,
+    price: productData.price,
+    interval: productData.interval,
+    color: productData.color,
+    ads: productData.ads,
+  };
 
   return new Promise((res, err) => {
-    if (!product) return err("Invalid plan");
-
     try {
       const subscription = new APIContracts.ARBSubscriptionType();
       subscription.setName(product.title);

@@ -96,24 +96,29 @@ const submitAd = async (req, res) => {
         ad.isVertical = isVertical;
 
       if (isShown === true) {
-        const { product } = await getAuthorizeSubscriptionStatus({
-          subscriptionId: companyData.authorizeSubscriptionId,
-          includeTransactions: true,
-        });
-        const shownAds = await Ads.find({
-          companyId: companyData._id,
-          isShown: true,
-        });
-
-        if (
-          product &&
-          shownAds.filter((other) => other._id !== ad._id).length < product.ads
-        ) {
+        if (companyData.isAdmin) {
           ad.isShown = true;
         } else {
-          return res
-            .status(400)
-            .json({ message: "You have reached maximum number of ads" });
+          const { product } = await getAuthorizeSubscriptionStatus({
+            subscriptionId: companyData.authorizeSubscriptionId,
+            includeTransactions: true,
+          });
+          const shownAds = await Ads.find({
+            companyId: companyData._id,
+            isShown: true,
+          });
+
+          if (
+            product &&
+            shownAds.filter((other) => other._id !== ad._id).length <
+              product.ads
+          ) {
+            ad.isShown = true;
+          } else {
+            return res
+              .status(400)
+              .json({ message: "You have reached maximum number of ads" });
+          }
         }
       } else if (isShown === false) {
         ad.isShown = false;
@@ -271,7 +276,7 @@ const removeAd = async (req, res) => {
     if (!companyData)
       return res.status(403).json({ message: "Token is invalid" });
 
-    if (companyData._id.equals(ad.companyId)) {
+    if (companyData._id.equals(ad.companyId) || companyData.isAdmin) {
       try {
         await shopify.asset.delete(process.env.SHOPIFY_THEME_ID, {
           asset: { key: `assets/${ad._id}` },

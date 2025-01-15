@@ -6,6 +6,7 @@ const authRouter = require("./routes/authRoutes");
 const subsRouter = require("./routes/subsRoutes");
 const adsRouter = require("./routes/adsRoutes");
 const companyRouter = require("./routes/companyRoutes");
+const productRouter = require("./routes/productRoutes");
 const authMiddleware = require("./middlewares/auth");
 const {
   getRandomAd,
@@ -46,6 +47,7 @@ app.use("/api/auth", authRouter);
 app.use("/api/subscription", authMiddleware, subsRouter);
 app.use("/api/ads", authMiddleware, adsRouter);
 app.use("/api/company", adminMiddleware, companyRouter);
+app.use("/api/product", adminMiddleware, productRouter);
 app.get("/api/randomAd", getRandomAd);
 app.get("/api/increaseViews/:id", increaseViews);
 app.get("/api/increaseClicks/:id", increaseClicks);
